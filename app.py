@@ -32,11 +32,12 @@ CATEGORY_MAPPING = {
     "Electronics": ["electronic", "mobile", "laptop", "charger", "camera", "headphone", "earphone"],
     "Fashion": ["fashion", "clothing", "dress", "shirt", "jeans", "shoes", "footwear"],
     "Home & Kitchen": ["home", "kitchen", "cookware", "utensil", "furniture", "decor"],
-    "Health": ["health", "medicine", "supplement", "vitamin", "wellness", "medical","sanitary"],
+    "Health": ["health", "medicine", "supplement", "vitamin", "wellness", "medical", "sanitary"],
     "Sports & Fitness": ["sports", "fitness", "gym", "exercise", "yoga"],
     "Books & Stationery": ["book", "novel", "study", "stationery", "pen", "notebook"],
     "Others": []
 }
+
 
 def map_to_main_category(raw_category):
     if not isinstance(raw_category, str):
@@ -127,6 +128,13 @@ def filter_by_category(df):
 
 
 def display_products(recs_with_details, products_per_row=3):
+    """
+    Displays product cards with:
+    - Equal image dimensions
+    - Add button
+    - View Details button (expandable)
+    """
+
     placeholder_img = "https://via.placeholder.com/300x300.png?text=No+Image"
 
     for i, (_, product) in enumerate(recs_with_details.head(9).iterrows()):
@@ -134,14 +142,25 @@ def display_products(recs_with_details, products_per_row=3):
             cols = st.columns(products_per_row)
 
         with cols[i % products_per_row]:
+            # ---------- IMAGE ----------
             img_url = product.get("ImageURL")
-            final_img = img_url if isinstance(img_url, str) and img_url.startswith("http") else placeholder_img
+            final_img = (
+                img_url
+                if isinstance(img_url, str) and img_url.startswith("http")
+                else placeholder_img
+            )
 
             st.markdown(
                 f"""
-                <div style="height:260px; display:flex; align-items:center;
-                            justify-content:center; background:#111;
-                            border-radius:10px; overflow:hidden;">
+                <div style="
+                    height:260px;
+                    width:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    background:#111;
+                    border-radius:10px;
+                    overflow:hidden;">
                     <img src="{final_img}"
                          style="max-height:100%; max-width:100%; object-fit:contain;">
                 </div>
@@ -149,14 +168,40 @@ def display_products(recs_with_details, products_per_row=3):
                 unsafe_allow_html=True
             )
 
-            name = product["Name"]
+            # ---------- BASIC INFO ----------
+            name = product.get("Name", "Unknown Product")
+            brand = product.get("Brand", "N/A")
+            rating = product.get("Rating", 0)
+            reviews = product.get("ReviewCount", 0)
+            category = product.get("MainCategory", "N/A")
+
             display_name = name[:55] + "..." if len(name) > 55 else name
 
             st.markdown(f"**{display_name}**")
-            st.markdown(f"Brand: {product['Brand']}")
-            st.markdown(f"⭐ {round(product['Rating'], 1)}")
+            st.caption(f"Brand: {brand}")
+            st.markdown(f"⭐ {round(rating, 1)} ({reviews} reviews)")
 
-            st.button("Add", key=f"{product['Name']}_{i}")
+            # ---------- ACTION BUTTONS ----------
+            col1, col2 = st.columns(2)
+            with col1:
+                st.button("Add", key=f"add_{name}_{i}")
+            with col2:
+                view = st.button("View Details", key=f"view_{name}_{i}")
+
+            # ---------- VIEW DETAILS ----------
+            if view:
+                with st.expander("Product Details", expanded=True):
+                    st.markdown(f"**Product Name:** {name}")
+                    st.markdown(f"**Brand:** {brand}")
+                    st.markdown(f"**Category:** {category}")
+                    st.markdown(f"**Rating:** ⭐ {round(rating, 1)}")
+                    st.markdown(f"**Total Reviews:** {reviews}")
+
+                    if "Tags" in product:
+                        st.markdown(f"**Tags:** {product['Tags']}")
+
+                    if "Category" in product:
+                        st.markdown(f"**Original Category:** {product['Category']}")
 
 
 # =========================================================
