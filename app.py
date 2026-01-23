@@ -94,7 +94,7 @@ with left_col:
         placeholder="Enter product name"
     )
 
-    get_rec = st.button("Get Recommendations")
+    get_rec = st.button("Submit")
 
     # Recent activity
     st.subheader("🕒 Recent Activity")
@@ -207,3 +207,4 @@ with right_col:
                 top_n=6
             )
             display_products(collab_recs)
+
